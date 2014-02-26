@@ -9,26 +9,7 @@ namespace MyHoard.Models
 {
     public class BaseEntity
     {
-        private int id;
-
         [PrimaryKey, AutoIncrement] 
-        public int Id 
-        {
-            get { return id; }
-            set
-            {
-                id = value;
-            }
-        }
-
-        private string serverId;
-        public string ServerId
-        {
-            get { return serverId; }
-            set
-            {
-                serverId = value;
-            }
-        }
+        public int Id { get; set; }
     }
 }

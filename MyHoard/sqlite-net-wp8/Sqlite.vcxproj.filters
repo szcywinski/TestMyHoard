@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClInclude Include="pch.h" />
     <ClInclude Include="SqliteWP8.h" />
+    <ClInclude Include="sqlite3.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />

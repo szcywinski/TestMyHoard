@@ -102,6 +102,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\$(TargetFrameworkIdentifier)\$(TargetFrameworkVersion)\Microsoft.$(TargetFrameworkIdentifier).$(TargetFrameworkVersion).Overrides.targets" />
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\$(TargetFrameworkIdentifier)\$(TargetFrameworkVersion)\Microsoft.$(TargetFrameworkIdentifier).CSharp.targets" />
   <ProjectExtensions />
@@ -110,7 +111,8 @@
     </PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PreBuildEvent>xcopy /b /y "$(ProjectDir)$(ConfigurationName)\$(PlatformName)\sqlite3.dll" "$(ProjectDir)"</PreBuildEvent>
+    <PreBuildEvent>xcopy /b /y "$(ProjectDir)$(ConfigurationName)\$(PlatformName)\sqlite3.dll" "$(ProjectDir)"
+xcopy /b /y "$(SolutionDir)Sqlite\$(PlatformName)\*" "$(SolutionDir)Sqlite"</PreBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

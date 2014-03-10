@@ -108,6 +108,7 @@
     <Compile Include="ViewModels\AddItemViewModel.cs" />
     <Compile Include="ViewModels\CollectionDetailsViewModel.cs" />
     <Compile Include="ViewModels\CollectionListViewModel.cs" />
+    <Compile Include="ViewModels\ItemDetailsViewModel.cs" />
     <Compile Include="Views\AddCollectionView.xaml.cs">
       <DependentUpon>AddCollectionView.xaml</DependentUpon>
     </Compile>
@@ -196,6 +197,7 @@
     <Content Include="Images\delete.png" />
     <Content Include="Images\edit.png" />
     <Content Include="Images\camera.png" />
+    <Content Include="Images\folder.png" />
     <Content Include="Images\save.png" />
     <Content Include="README_FIRST.txt" />
     <Content Include="Toolkit.Content\ApplicationBar.Add.png" />

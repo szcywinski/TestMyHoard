@@ -31,25 +31,7 @@ namespace MyHoard.ViewModels
         private Dictionary<Media,BitmapImage> pictureDictionary;
         private ObservableCollection<BitmapImage> pictures;
 
-        public ObservableCollection<BitmapImage> Pictures
-        {
-            get { return pictures; }
-            set
-            {
-                pictures = value;
-                NotifyOfPropertyChange(() => Pictures);
-            }
-        }
-
-        public Dictionary<Media, BitmapImage> PictureDictionary
-        {
-            get { return pictureDictionary; }
-            set
-            {
-                pictureDictionary = value;
-                NotifyOfPropertyChange(() => PictureDictionary);
-            }
-        }
+        
 
 
         public AddItemViewModel(INavigationService navigationService, CollectionService collectionService, ItemService itemService,  IEventAggregator eventAggregator, MediaService mediaService)
@@ -63,15 +45,27 @@ namespace MyHoard.ViewModels
 
         public void DataChanged()
         {
+            bool picturesChanged=false;
+            foreach (Media m in PictureDictionary.Keys)
+            {
+                if(String.IsNullOrEmpty(m.FileName))
+                {
+                    picturesChanged = true;
+                }
+            }
             CanSave = !String.IsNullOrEmpty(CurrentItem.Name) && CurrentItem.Name.Length>=2 && (ItemId == 0 ||
-                !StringsEqual(editedItem.Name, CurrentItem.Name) || !StringsEqual(editedItem.Description, CurrentItem.Description));
+                !StringsEqual(editedItem.Name, CurrentItem.Name) || !StringsEqual(editedItem.Description, CurrentItem.Description) || picturesChanged);
         }
 
 
         public void TakePicture()
         {
             eventAggregator.RequestTask<CameraCaptureTask>();
-            
+        }
+
+        public void TakePictureFromGallery()
+        {
+            eventAggregator.RequestTask<PhotoChooserTask>();
         }
 
 
@@ -83,7 +77,7 @@ namespace MyHoard.ViewModels
                 image.SetSource(e.Result.ChosenPhoto);
                 PictureDictionary.Add(new Media() { ItemId = itemId },image);
                 Pictures.Add(image);
-                NotifyOfPropertyChange(() => Pictures);
+                DataChanged();
             }
         }
 
@@ -95,7 +89,7 @@ namespace MyHoard.ViewModels
                 if (itemService.ModifyItem(CurrentItem).Id == CurrentItem.Id)
                 {
                     mediaService.SavePictureDicitonary(PictureDictionary);
-                    NavigationService.UriFor<CollectionDetailsViewModel>().WithParam(x => x.CollectionId, CollectionId).Navigate();
+                    NavigationService.UriFor<ItemDetailsViewModel>().WithParam(x => x.ItemId, ItemId).Navigate();
                     this.NavigationService.RemoveBackEntry();
                     this.NavigationService.RemoveBackEntry();
                     
@@ -110,25 +104,13 @@ namespace MyHoard.ViewModels
                         m.ItemId = CurrentItem.Id;
                     }
                     mediaService.SavePictureDicitonary(PictureDictionary);
-                    NavigationService.UriFor<CollectionDetailsViewModel>().WithParam(x => x.CollectionId, CollectionId).Navigate();
-                    this.NavigationService.RemoveBackEntry();
+                    NavigationService.UriFor<ItemDetailsViewModel>().WithParam(x => x.ItemId, CurrentItem.Id).Navigate();
                     this.NavigationService.RemoveBackEntry();
                 }
             }
         }
 
-        public void Delete()
-        {
-            MessageBoxResult messageResult = MessageBox.Show(AppResources.DeleteDialog + " \"" + CurrentItem.Name + "\"?", AppResources.Delete, MessageBoxButton.OKCancel);
-            if (messageResult == MessageBoxResult.OK)
-            {
-                itemService.DeleteItem(CurrentItem);
-                NavigationService.UriFor<CollectionDetailsViewModel>().WithParam(x => x.CollectionId, CollectionId).Navigate();
-                this.NavigationService.RemoveBackEntry();
-                this.NavigationService.RemoveBackEntry();
-            }
-        }
-
+        
         protected override void OnInitialize()
         {
             if (ItemId > 0)
@@ -167,6 +149,26 @@ namespace MyHoard.ViewModels
             { 
                 canSave = value;
                 NotifyOfPropertyChange(() => CanSave);
+            }
+        }
+
+        public ObservableCollection<BitmapImage> Pictures
+        {
+            get { return pictures; }
+            set
+            {
+                pictures = value;
+                NotifyOfPropertyChange(() => Pictures);
+            }
+        }
+
+        public Dictionary<Media, BitmapImage> PictureDictionary
+        {
+            get { return pictureDictionary; }
+            set
+            {
+                pictureDictionary = value;
+                NotifyOfPropertyChange(() => PictureDictionary);
             }
         }
 

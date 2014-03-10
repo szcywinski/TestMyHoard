@@ -20,6 +20,7 @@ namespace MyHoard.ViewModels
         private int itemId;
         private Item currentItem;
         private List<Media> pictures;
+        private Media selectedPicture;
 
         public ItemDetailsViewModel(INavigationService navigationService, CollectionService collectionService, ItemService itemService, MediaService mediaService)
             : base(navigationService, collectionService)
@@ -34,9 +35,10 @@ namespace MyHoard.ViewModels
             if (ItemId > 0)
             {
                 CurrentItem = itemService.GetItem(ItemId);
-                Pictures = mediaService.MediaList(ItemId,true);
+                Pictures = mediaService.MediaList(ItemId,true, true);
             }
         }
+
 
         public void Delete()
         {
@@ -50,12 +52,26 @@ namespace MyHoard.ViewModels
             }
         }
 
+
         public void Edit()
         {
             NavigationService.UriFor<AddItemViewModel>().WithParam(x => x.ItemId, CurrentItem.Id).Navigate();
         }
 
+        public void ShowPicture()
+        {
+            NavigationService.UriFor<PictureViewModel>().WithParam(x => x.PictureName, SelectedPicture.FileName).Navigate();
+        }
 
+        public Media SelectedPicture
+        {
+            get { return selectedPicture; }
+            set
+            {
+                selectedPicture = value;
+                NotifyOfPropertyChange(() => SelectedPicture);
+            }
+        }
 
         public List<Media> Pictures
         {

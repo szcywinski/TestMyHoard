@@ -27,13 +27,12 @@ namespace MyHoard.ViewModels
         private Item editedItem;
         private bool canSave;
         private Visibility isDeleteVisible;
-
-        private Dictionary<Media,BitmapImage> pictureDictionary;
-        private ObservableCollection<BitmapImage> pictures;
-
+        private Media selectedPicture;
         
+        private ObservableCollection<Media> pictures;
+        private List<Media> picturesToDelete;
 
-
+    
         public AddItemViewModel(INavigationService navigationService, CollectionService collectionService, ItemService itemService,  IEventAggregator eventAggregator, MediaService mediaService)
             : base(navigationService, collectionService)
 
@@ -43,16 +42,37 @@ namespace MyHoard.ViewModels
             this.eventAggregator = eventAggregator;
         }
 
+        public void DeleteImage()
+        {
+            MessageBoxResult messageResult = MessageBox.Show(AppResources.DeleteDialog + " " + AppResources.ThisImage + "?", AppResources.Delete, MessageBoxButton.OKCancel);
+            if (messageResult == MessageBoxResult.OK)
+            {
+                SelectedPicture.ToDelete = true;
+                picturesToDelete.Add(SelectedPicture);
+                Pictures.Remove(SelectedPicture);
+                DataChanged();
+            }
+        }
+
+        
+
         public void DataChanged()
         {
             bool picturesChanged=false;
-            foreach (Media m in PictureDictionary.Keys)
+           
+            if (picturesToDelete.Count>0)
             {
-                if(String.IsNullOrEmpty(m.FileName))
-                {
-                    picturesChanged = true;
-                }
+                picturesChanged = true;
             }
+            else
+                foreach (Media m in Pictures)
+                {
+                    if (String.IsNullOrEmpty(m.FileName))
+                    {
+                        picturesChanged = true;
+                    }
+                }
+
             CanSave = !String.IsNullOrEmpty(CurrentItem.Name) && CurrentItem.Name.Length>=2 && (ItemId == 0 ||
                 !StringsEqual(editedItem.Name, CurrentItem.Name) || !StringsEqual(editedItem.Description, CurrentItem.Description) || picturesChanged);
         }
@@ -75,8 +95,7 @@ namespace MyHoard.ViewModels
             {
                 BitmapImage image = new BitmapImage();
                 image.SetSource(e.Result.ChosenPhoto);
-                PictureDictionary.Add(new Media() { ItemId = itemId },image);
-                Pictures.Add(image);
+                Pictures.Add(new Media() { ItemId = itemId, Image = image });
                 DataChanged();
             }
         }
@@ -88,7 +107,8 @@ namespace MyHoard.ViewModels
             {
                 if (itemService.ModifyItem(CurrentItem).Id == CurrentItem.Id)
                 {
-                    mediaService.SavePictureDicitonary(PictureDictionary);
+                    mediaService.SavePictureList(Pictures);
+                    mediaService.SavePictureList(picturesToDelete);
                     NavigationService.UriFor<ItemDetailsViewModel>().WithParam(x => x.ItemId, ItemId).Navigate();
                     this.NavigationService.RemoveBackEntry();
                     this.NavigationService.RemoveBackEntry();
@@ -99,11 +119,11 @@ namespace MyHoard.ViewModels
             {
                 if (itemService.AddItem(CurrentItem).Id > 0)
                 {
-                    foreach(Media m in PictureDictionary.Keys)
+                    foreach(Media m in Pictures)
                     {
                         m.ItemId = CurrentItem.Id;
                     }
-                    mediaService.SavePictureDicitonary(PictureDictionary);
+                    mediaService.SavePictureList(Pictures);
                     NavigationService.UriFor<ItemDetailsViewModel>().WithParam(x => x.ItemId, CurrentItem.Id).Navigate();
                     this.NavigationService.RemoveBackEntry();
                 }
@@ -123,8 +143,7 @@ namespace MyHoard.ViewModels
                     Name = CurrentItem.Name,
                     Description = CurrentItem.Description,
                 };
-                PictureDictionary = mediaService.PictureDictionary(ItemId);
-                Pictures = new ObservableCollection<BitmapImage>(PictureDictionary.Values.ToList());
+                Pictures = new ObservableCollection<Media>(mediaService.MediaList(ItemId,true));
                 IsDeleteVisible = Visibility.Visible;
             }
             else
@@ -132,14 +151,25 @@ namespace MyHoard.ViewModels
                 PageTitle = AppResources.AddItem;
                 CurrentItem = new Item() { CollectionId = CollectionId };
                 IsDeleteVisible = Visibility.Collapsed;
-                PictureDictionary = new Dictionary<Media, BitmapImage>();
-                Pictures = new ObservableCollection<BitmapImage>();
+                Pictures= new ObservableCollection<Media>();
             }
+            picturesToDelete = new List<Media>();
         }
 
         public void Handle(ServiceErrorMessage message)
         {
             MessageBox.Show(message.Content);
+        }
+
+        public Media SelectedPicture
+        {
+            get { return selectedPicture; }
+            set
+            {
+                selectedPicture = value;
+                NotifyOfPropertyChange(() => CanSave);
+                DeleteImage();
+            }
         }
 
         public bool CanSave
@@ -152,7 +182,7 @@ namespace MyHoard.ViewModels
             }
         }
 
-        public ObservableCollection<BitmapImage> Pictures
+        public ObservableCollection<Media> Pictures
         {
             get { return pictures; }
             set
@@ -162,16 +192,7 @@ namespace MyHoard.ViewModels
             }
         }
 
-        public Dictionary<Media, BitmapImage> PictureDictionary
-        {
-            get { return pictureDictionary; }
-            set
-            {
-                pictureDictionary = value;
-                NotifyOfPropertyChange(() => PictureDictionary);
-            }
-        }
-
+        
         public Visibility IsDeleteVisible
         {
             get { return isDeleteVisible; }

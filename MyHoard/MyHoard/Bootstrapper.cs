@@ -32,11 +32,14 @@ namespace MyHoard
             container.PerRequest<AddItemViewModel>();
             container.PerRequest<ItemDetailsViewModel>();
             container.PerRequest<PictureViewModel>();
+            container.PerRequest<PhotoChooserViewModel>();
+            container.PerRequest<SettingsViewModel>();
+            container.PerRequest<RegisterViewModel>();
             container.Singleton<DatabaseService>();
             container.Singleton<CollectionService>();
             container.Singleton<ItemService>();
-            container.Singleton<MediaService>(); 
-
+            container.Singleton<MediaService>();
+            
             AddCustomConventions();
                 
         }

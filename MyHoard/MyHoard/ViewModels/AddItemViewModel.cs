@@ -14,7 +14,7 @@ using System.Windows.Media.Imaging;
 
 namespace MyHoard.ViewModels
 {
-    public class AddItemViewModel : ViewModelBase, IHandle<ServiceErrorMessage>, IHandle<TaskCompleted<PhotoResult>>
+    public class AddItemViewModel : ViewModelBase, IHandle<ServiceErrorMessage>, IHandle<TaskCompleted<PhotoResult>>, IHandle<Media>
     {
         private ItemService itemService;
         private MediaService mediaService;
@@ -26,11 +26,13 @@ namespace MyHoard.ViewModels
         private Item currentItem;
         private Item editedItem;
         private bool canSave;
+        private bool staySubscribed;
         private Visibility isDeleteVisible;
         private Media selectedPicture;
         
         private ObservableCollection<Media> pictures;
         private List<Media> picturesToDelete;
+        
 
     
         public AddItemViewModel(INavigationService navigationService, CollectionService collectionService, ItemService itemService,  IEventAggregator eventAggregator, MediaService mediaService)
@@ -47,8 +49,11 @@ namespace MyHoard.ViewModels
             MessageBoxResult messageResult = MessageBox.Show(AppResources.DeleteDialog + " " + AppResources.ThisImage + "?", AppResources.Delete, MessageBoxButton.OKCancel);
             if (messageResult == MessageBoxResult.OK)
             {
-                SelectedPicture.ToDelete = true;
-                picturesToDelete.Add(SelectedPicture);
+                if (!String.IsNullOrEmpty(SelectedPicture.FileName))
+                {
+                    SelectedPicture.ToDelete = true;
+                    picturesToDelete.Add(SelectedPicture);
+                }
                 Pictures.Remove(SelectedPicture);
                 DataChanged();
             }
@@ -85,9 +90,18 @@ namespace MyHoard.ViewModels
 
         public void TakePictureFromGallery()
         {
-            eventAggregator.RequestTask<PhotoChooserTask>();
+            staySubscribed = true;
+            NavigationService.UriFor<PhotoChooserViewModel>().Navigate();
         }
 
+        public void Handle(Media m)
+        {
+            staySubscribed = false;
+            m.FileName = "";
+            m.ItemId = ItemId;
+            Pictures.Add(m);
+            DataChanged();
+        }
 
         public void Handle(TaskCompleted<PhotoResult> e)
         {
@@ -256,14 +270,17 @@ namespace MyHoard.ViewModels
 
         protected override void OnDeactivate(bool close)
         {
-            eventAggregator.Unsubscribe(this);
+            if(!staySubscribed)
+                eventAggregator.Unsubscribe(this);
             base.OnDeactivate(close);
         }
 
         protected override void OnActivate()
         {
-            eventAggregator.Subscribe(this);
+            if(!staySubscribed)
+                eventAggregator.Subscribe(this);
             base.OnActivate();
+            staySubscribed = false;
         }
 
         private bool StringsEqual(string string1, string string2)

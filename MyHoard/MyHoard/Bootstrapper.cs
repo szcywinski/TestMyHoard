@@ -35,10 +35,12 @@ namespace MyHoard
             container.PerRequest<PhotoChooserViewModel>();
             container.PerRequest<SettingsViewModel>();
             container.PerRequest<RegisterViewModel>();
+            container.PerRequest<LoginViewModel>();
             container.Singleton<DatabaseService>();
             container.Singleton<CollectionService>();
             container.Singleton<ItemService>();
             container.Singleton<MediaService>();
+            container.Singleton<ConfigurationService>();
             
             AddCustomConventions();
                 
@@ -68,6 +70,23 @@ namespace MyHoard
         {
             base.OnLaunch(sender, e);
             IoC.Get<MediaService>().CleanIsolatedStorage();
+        }
+        protected override void OnClose(object sender, Microsoft.Phone.Shell.ClosingEventArgs e)
+        {
+            ConfigurationService configurationService = IoC.Get<ConfigurationService>();
+            if(configurationService.Configuration.KeepLogged)
+            {
+                RegistrationService rs = new RegistrationService();
+                rs.Login(configurationService.Configuration.UserName, configurationService.Configuration.Password, true, configurationService.Configuration.Backend);
+            }
+            else
+            {
+                configurationService.Configuration.IsLoggedIn = false;
+                configurationService.SaveConfig();
+            }
+
+            
+            base.OnClose(sender, e);
         }
 
            

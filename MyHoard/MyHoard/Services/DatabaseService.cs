@@ -23,6 +23,7 @@ namespace MyHoard.Services
             dbConnection.CreateTable<Collection>();
             dbConnection.CreateTable<Item>();
             dbConnection.CreateTable<Media>();
+            dbConnection.CreateTable<Configuration>();
             
         }
 
@@ -61,6 +62,11 @@ namespace MyHoard.Services
         public void CloseConnection()
         {
             dbConnection.Close();
+        }
+
+        public int DeleteAll<T>()
+        {
+            return dbConnection.DeleteAll<T>();
         }
 
     }
